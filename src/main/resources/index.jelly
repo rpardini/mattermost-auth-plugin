@@ -23,5 +23,5 @@
  * -->
 <?jelly escape-by-default='true'?>
 <div>
-  Allows you to log in using an openid connect server.
+  Allows you to log in using a Mattermost server.
 </div>

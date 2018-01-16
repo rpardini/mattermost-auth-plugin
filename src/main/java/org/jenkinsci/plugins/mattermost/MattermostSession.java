@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.oic;
+package org.jenkinsci.plugins.mattermost;
 
 import com.google.api.client.auth.oauth2.AuthorizationCodeFlow;
 import com.google.api.client.auth.oauth2.AuthorizationCodeRequestUrl;
@@ -40,17 +40,19 @@ import java.util.UUID;
 
 /**
  * The state of the OpenId connect request.
- *
+ * <p>
  * Verifies the validity of the response by comparing the state.
  *
  * @author Kohsuke Kawaguchi - initial author?
  * @author Ryan Campbell - initial author?
  * @author Michael Bischoff - adoptation
+ * @author Ricardo Pardini -  copy, used for Mattermost, squashed some warnings
  */
-abstract class OicSession {
+abstract class MattermostSession {
 
+    private static final String SESSION_NAME = MattermostSession.class.getName();
     private final AuthorizationCodeFlow flow;
-    private final String uuid = Base64.encode(UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8)).substring(0,20);
+    private final String uuid = Base64.encode(UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8)).substring(0, 20);
     /**
      * The url the user was trying to navigate to.
      */
@@ -60,17 +62,24 @@ abstract class OicSession {
      */
     private final String redirectUrl;
 
-    OicSession(AuthorizationCodeFlow flow, String from, String redirectUrl) {
+    MattermostSession(AuthorizationCodeFlow flow, String from, String redirectUrl) {
         this.flow = flow;
         this.from = from;
         this.redirectUrl = redirectUrl;
     }
 
     /**
+     * Gets the {@link MattermostSession} associated with HTTP session in the current extend.
+     */
+    public static MattermostSession getCurrent() {
+        return (MattermostSession) Stapler.getCurrentRequest().getSession().getAttribute(SESSION_NAME);
+    }
+
+    /**
      * Starts the login session.
      */
     @SuppressFBWarnings("J2EE_STORE_OF_NON_SERIALIZABLE_OBJECT_INTO_SESSION")
-    public HttpResponse doCommenceLogin() throws IOException {
+    public HttpResponse doCommenceLogin() {
         // remember this in the session
         Stapler.getCurrentRequest().getSession().setAttribute(SESSION_NAME, this);
         AuthorizationCodeRequestUrl authorizationCodeRequestUrl = flow.newAuthorizationUrl().setState(uuid).setRedirectUri(redirectUrl);
@@ -86,7 +95,7 @@ abstract class OicSession {
             buf.append('?').append(request.getQueryString());
         }
         AuthorizationCodeResponseUrl responseUrl = new AuthorizationCodeResponseUrl(buf.toString());
-        if (! uuid.equals(responseUrl.getState())) {
+        if (!uuid.equals(responseUrl.getState())) {
             return HttpResponses.error(401, "State is invalid");
         }
         String code = responseUrl.getCode();
@@ -109,13 +118,4 @@ abstract class OicSession {
     }
 
     protected abstract HttpResponse onSuccess(String authorizationCode) throws IOException;
-
-    /**
-     * Gets the {@link OicSession} associated with HTTP session in the current extend.
-     */
-    public static OicSession getCurrent() {
-        return (OicSession) Stapler.getCurrentRequest().getSession().getAttribute(SESSION_NAME);
-    }
-
-    private static final String SESSION_NAME = OicSession.class.getName();
 }
