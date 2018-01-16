@@ -64,16 +64,16 @@ import java.util.Collections;
  */
 public class MattermostSecurityRealm extends SecurityRealm {
 
-    private static final JsonFactory JSON_FACTORY = new JacksonFactory();
-    private final HttpTransport httpTransport;
+    private transient static final JsonFactory JSON_FACTORY = new JacksonFactory();
+    private transient final HttpTransport httpTransport;
 
     private final String clientId;
     private final Secret clientSecret;
     private final String mattermostServerUrl;
     private final boolean disableSslVerification;
-    private final String mattermostUserInfoUrl;
-    private final String matterMostTokenServerUrl;
-    private final String mattermostAuthorizationServerUrl;
+    private transient final String mattermostUserInfoUrl;
+    private transient final String matterMostTokenServerUrl;
+    private transient final String mattermostAuthorizationServerUrl;
 
     @DataBoundConstructor
     public MattermostSecurityRealm(String clientId, String clientSecret, String mattermostServerUrl, boolean disableSslVerification) {
