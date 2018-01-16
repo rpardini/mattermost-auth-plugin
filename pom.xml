@@ -12,14 +12,14 @@
     </properties>
 
     <artifactId>mattermost-auth</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>0.2</version>
     <packaging>hpi</packaging>
 
     <scm>
         <connection>scm:git:ssh://github.com/rpardini/mattermost-auth-plugin.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/rpardini/mattermost-auth-plugin.git</developerConnection>
         <url>https://github.com/rpardini/mattermost--auth-plugin</url>
-        <tag>HEAD</tag>
+        <tag>mattermost-auth-0.2</tag>
     </scm>
 
     <name>Mattermost Authentication Plugin</name>
