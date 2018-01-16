@@ -65,15 +65,11 @@ import java.util.Collections;
 public class MattermostSecurityRealm extends SecurityRealm {
 
     private transient static final JsonFactory JSON_FACTORY = new JacksonFactory();
-    private transient final HttpTransport httpTransport;
 
     private final String clientId;
     private final Secret clientSecret;
     private final String mattermostServerUrl;
     private final boolean disableSslVerification;
-    private transient final String mattermostUserInfoUrl;
-    private transient final String matterMostTokenServerUrl;
-    private transient final String mattermostAuthorizationServerUrl;
 
     @DataBoundConstructor
     public MattermostSecurityRealm(String clientId, String clientSecret, String mattermostServerUrl, boolean disableSslVerification) {
@@ -81,13 +77,6 @@ public class MattermostSecurityRealm extends SecurityRealm {
         this.clientSecret = Secret.fromString(clientSecret);
         this.mattermostServerUrl = mattermostServerUrl;
         this.disableSslVerification = disableSslVerification;
-
-        // These are derived from the mm base url
-        this.mattermostAuthorizationServerUrl = this.mattermostServerUrl + "/oauth/authorize";
-        this.matterMostTokenServerUrl = this.mattermostServerUrl + "/oauth/access_token";
-        this.mattermostUserInfoUrl = this.mattermostServerUrl + "/api/v4/users/me";
-
-        this.httpTransport = constructHttpTransport(this.disableSslVerification);
     }
 
     private HttpTransport constructHttpTransport(boolean disableSslVerification) {
@@ -161,12 +150,12 @@ public class MattermostSecurityRealm extends SecurityRealm {
 
         final AuthorizationCodeFlow flow = new AuthorizationCodeFlow.Builder(
                 BearerToken.queryParameterAccessMethod(),
-                httpTransport,
+                constructHttpTransport(this.disableSslVerification),
                 JSON_FACTORY,
-                new GenericUrl(matterMostTokenServerUrl),
+                new GenericUrl(this.mattermostServerUrl + "/oauth/access_token"),
                 new ClientParametersAuthentication(clientId, clientSecret.getPlainText()),
                 clientId,
-                mattermostAuthorizationServerUrl
+                this.mattermostServerUrl + "/oauth/authorize"
         )
                 .setScopes(Collections.singletonList("openid email"))
                 .build();
@@ -222,7 +211,7 @@ public class MattermostSecurityRealm extends SecurityRealm {
                 request.getHeaders().setAuthorization("Bearer " + accessToken);
             }
         });
-        HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(mattermostUserInfoUrl));
+        HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(this.mattermostServerUrl + "/api/v4/users/me"));
         request.setParser(new JsonObjectParser(flow.getJsonFactory()));
         request.setThrowExceptionOnExecuteError(false);
         com.google.api.client.http.HttpResponse response = request.execute();
