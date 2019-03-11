@@ -47,8 +47,11 @@ import org.acegisecurity.*;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.providers.UsernamePasswordAuthenticationToken;
 import org.acegisecurity.providers.anonymous.AnonymousAuthenticationToken;
+import org.acegisecurity.userdetails.UserDetails;
 import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.HttpResponse;
+import jenkins.security.SecurityListener;
+
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -172,7 +175,7 @@ public class MattermostSecurityRealm extends SecurityRealm {
                     String accessToken = response.getAccessToken();
 
                     GenericJson userInfo = getUserInfo(flow, accessToken);
-                    String username = (String) userInfo.get("username");
+                    final String username = (String) userInfo.get("username");
 
                     if (username == null) {
                         return HttpResponses.error(500, "no field 'username' was supplied in the token payload to be used as the username");
@@ -180,7 +183,8 @@ public class MattermostSecurityRealm extends SecurityRealm {
 
                     flow.createAndStoreCredential(response, null);
 
-                    UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(username, "", new GrantedAuthority[]{SecurityRealm.AUTHENTICATED_AUTHORITY});
+                    final GrantedAuthority[] authorities = {SecurityRealm.AUTHENTICATED_AUTHORITY};
+                    UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(username, "", authorities);
                     SecurityContextHolder.getContext().setAuthentication(token);
 
                     User u = User.get(token.getName());
@@ -192,6 +196,43 @@ public class MattermostSecurityRealm extends SecurityRealm {
 
                     String fullName = userInfo.get("first_name") + " " + userInfo.get("last_name");
                     u.setFullName(fullName);
+
+                    SecurityListener.fireAuthenticated(new UserDetails() {
+                        @Override
+                        public GrantedAuthority[] getAuthorities() {
+                            return authorities;
+                        }
+
+                        @Override
+                        public String getPassword() {
+                            return null;
+                        }
+
+                        @Override
+                        public String getUsername() {
+                            return username;
+                        }
+
+                        @Override
+                        public boolean isAccountNonExpired() {
+                            return true;
+                        }
+
+                        @Override
+                        public boolean isAccountNonLocked() {
+                            return true;
+                        }
+
+                        @Override
+                        public boolean isCredentialsNonExpired() {
+                            return true;
+                        }
+
+                        @Override
+                        public boolean isEnabled() {
+                            return true;
+                        }
+                    });
 
                     return new HttpRedirect(redirectOnFinish);
 
