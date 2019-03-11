@@ -3,11 +3,12 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>2.9</version>
+        <version>2.37</version>
     </parent>
 
     <properties>
-        <jenkins.version>1.580.1</jenkins.version>
+        <java.level>8</java.level>
+        <jenkins.version>2.168</jenkins.version>
         <skipTests>true</skipTests><!--there are no tests for this plugin-->
     </properties>
 

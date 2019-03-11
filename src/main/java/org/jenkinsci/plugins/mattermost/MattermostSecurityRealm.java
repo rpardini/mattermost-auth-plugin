@@ -43,15 +43,13 @@ import hudson.util.FormValidation;
 import hudson.util.HttpResponses;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
+import jenkins.security.SecurityListener;
 import org.acegisecurity.*;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.providers.UsernamePasswordAuthenticationToken;
 import org.acegisecurity.providers.anonymous.AnonymousAuthenticationToken;
-import org.acegisecurity.userdetails.UserDetails;
-import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.HttpResponse;
-import jenkins.security.SecurityListener;
-
+import org.kohsuke.stapler.*;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -197,43 +195,7 @@ public class MattermostSecurityRealm extends SecurityRealm {
                     String fullName = userInfo.get("first_name") + " " + userInfo.get("last_name");
                     u.setFullName(fullName);
 
-                    SecurityListener.fireAuthenticated(new UserDetails() {
-                        @Override
-                        public GrantedAuthority[] getAuthorities() {
-                            return authorities;
-                        }
-
-                        @Override
-                        public String getPassword() {
-                            return null;
-                        }
-
-                        @Override
-                        public String getUsername() {
-                            return username;
-                        }
-
-                        @Override
-                        public boolean isAccountNonExpired() {
-                            return true;
-                        }
-
-                        @Override
-                        public boolean isAccountNonLocked() {
-                            return true;
-                        }
-
-                        @Override
-                        public boolean isCredentialsNonExpired() {
-                            return true;
-                        }
-
-                        @Override
-                        public boolean isEnabled() {
-                            return true;
-                        }
-                    });
-
+                    SecurityListener.fireAuthenticated(new org.acegisecurity.userdetails.User(username, null, true, true, true, true, authorities));
                     return new HttpRedirect(redirectOnFinish);
 
                 } catch (IOException e) {
