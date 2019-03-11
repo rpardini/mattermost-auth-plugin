@@ -195,7 +195,7 @@ public class MattermostSecurityRealm extends SecurityRealm {
                     String fullName = userInfo.get("first_name") + " " + userInfo.get("last_name");
                     u.setFullName(fullName);
 
-                    SecurityListener.fireAuthenticated(new org.acegisecurity.userdetails.User(username, null, true, true, true, true, authorities));
+                    SecurityListener.fireAuthenticated(new MattermostUserDetails(username, authorities));
                     return new HttpRedirect(redirectOnFinish);
 
                 } catch (IOException e) {
